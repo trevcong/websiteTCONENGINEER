@@ -1,0 +1,16 @@
+STEPS: 
+1. SETUP Cloudflare tunnel from HOME PC doing the ML hardwork, to the webserver. DNS CNAME (comfyui.YOUR URL) this is setup in Cloud Flare DNS page, where the content is the tunnel ID.cfargotunnel.com. This will establish a secure tunnel. 
+  1.1 cloudflared tunnel run <CLOUD FLARED TUNNEL NAME>
+  This will start the tunnel
+  ensure tunnel yml is updated
+2. Next create the Python server to handle the API requests and responses. This will run a server on local host port 5000. 
+  1.1 Python ./comfyui-api 
+  127.0.0.1 - - [08/Jan/2025 15:56:47] "OPTIONS /api/generate HTTP/1.1" 200 -
+  127.0.0.1 - - [08/Jan/2025 15:57:02] "POST /api/generate HTTP/1.1" 200 -
+  This should appear once you have recieved the request, and for when you send the image back to the webserver for it to be displayed on the website.
+
+3. ComfyUI - flux1-schmell-fp8.safetensors (A stable diffustion model capable of generating images from text)
+ 3.1 Once you are able to get it working you will need to find the output folder. This is where you will be grabbing the lastest image that was generated. 
+  The Python server will handle the rest of the work, once the image is finished it will grab the latest image from the output folder
+
+USER should see an image!
