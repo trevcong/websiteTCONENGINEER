@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Generator</title>
+    <!-- Include Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="firebase-config.js"></script> <!-- Firebase auth -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        #progressBar {
+            width: 100%;
+            background-color: #ddd;
+            margin: 20px 0;
+            display: none;
+        }
+
+        #progressBar div {
+            height: 30px;
+            width: 0%;
+            background-color: #007bff;
+            text-align: center;
+            line-height: 30px;
+            color: white;
+        }
+
+        img {
+            max-width: 100%;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Image Generator</h1>
+        <p>You are successfully logged in.</p>
+
+        <!-- Prompt Input -->
+        <div id="promptContainer">
+            <input type="text" id="promptInput" placeholder="Enter a prompt to generate an image" required>
+            <button id="generateBtn">Generate Image</button>
+        </div>
+
+        <!-- Progress Bar -->
+        <div id="progressBar">
+            <div id="progressBarFill"></div>
+        </div>
+
+        <!-- Output Image -->
+        <img id="generatedImage" src="" alt="Generated Image" style="display: none;">
+
+        <!-- Logout Button -->
+        <button id="logoutBtn" style="margin-top: 20px;">Logout</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Redirect to login if user is not authenticated
+            firebase.auth().onAuthStateChanged(user => {
+                if (!user) {
+                    window.location.href = 'login.html'; // Redirect unauthenticated users
+                }
+            });
+
+            const generateBtn = document.getElementById('generateBtn');
+            const promptInput = document.getElementById('promptInput');
+            const progressBar = document.getElementById('progressBar');
+            const progressBarFill = document.getElementById('progressBarFill');
+            const generatedImage = document.getElementById('generatedImage');
+            const promptContainer = document.getElementById('promptContainer');
+
+            // Generate Image Functionality
+            generateBtn.addEventListener('click', async () => {
+                const prompt = promptInput.value.trim();
+                if (!prompt) {
+                    alert('Please enter a prompt.');
+                    return;
+                }
+
+                console.log("Prompt to send:", prompt);  // Debugging line to check the prompt
+
+                // Disable the button to prevent multiple clicks
+                generateBtn.disabled = true;
+
+                // Hide input, show progress bar
+                promptContainer.style.display = 'none';
+                progressBar.style.display = 'block';
+
+                // Simulate progress (you can replace this with actual progress updates later)
+                let progress = 0;
+                const progressInterval = setInterval(() => {
+                    progress += 10;
+                    progressBarFill.style.width = `${progress}%`;
+                    progressBarFill.textContent = `${progress}%`;
+
+                    if (progress >= 100) {
+                        clearInterval(progressInterval);
+                    }
+                }, 200);
+
+                try {
+                    const response = await fetch('YOUR API URL GATEWAY /API/GENERATE', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ prompt }),
+                    });
+
+                    console.log("Response status:", response.status);  // Log response status for debugging
+
+                    if (!response.ok) {
+                        throw new Error('Failed to generate image.');
+                    }
+
+                    // Read the image blob from the response
+                    const blob = await response.blob();
+                    const imageUrl = URL.createObjectURL(blob);
+
+                    // Update the image element with the generated image
+                    progressBar.style.display = 'none';
+                    generatedImage.src = imageUrl;
+                    generatedImage.style.display = 'block';
+                } catch (error) {
+                    console.error('Error generating image:', error);
+                    alert('Failed to generate image. Please try again.');
+                    promptContainer.style.display = 'block';
+                    progressBar.style.display = 'none';
+                } finally {
+                    // Re-enable the button after the request is complete
+                    generateBtn.disabled = false;
+                }
+            });
+
+            // Logout Functionality
+            document.getElementById('logoutBtn').addEventListener('click', async () => {
+                try {
+                    await firebase.auth().signOut();
+                    window.location.href = 'login.html';
+                } catch (error) {
+                    alert('Failed to log out. Please try again.');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
